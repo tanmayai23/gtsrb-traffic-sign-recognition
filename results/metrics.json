@@ -1,0 +1,544 @@
+{
+  "run": {
+    "timestamp": "2026-09-15T22:19:03",
+    "torch_version": "2.8.0+cpu",
+    "device": "cpu",
+    "seed": 42,
+    "split": "test",
+    "checkpoint": "C:\\Users\\tanma\\OneDrive\\Desktop\\Machine Learning\\CV project\\checkpoints\\best.pt"
+  },
+  "model": {
+    "name": "TrafficSignNet",
+    "params": 99019,
+    "img_size": 32,
+    "channels": [
+      32,
+      64,
+      128
+    ],
+    "use_clahe": true,
+    "balance": "sampler"
+  },
+  "training": {
+    "epochs_run": 13,
+    "best_val_acc": 0.9798212005108556
+  },
+  "test": {
+    "n_samples": 12630,
+    "accuracy": 0.9681710213776722,
+    "balanced_accuracy": 0.9581525305668377,
+    "macro_f1": 0.9567206229583674,
+    "weighted_f1": 0.96797481236648,
+    "top5_accuracy": 0.9955661124307205,
+    "n_errors": 402,
+    "inference_ms_per_image": 0.6709
+  },
+  "per_class": [
+    {
+      "class_id": 0,
+      "name": "Speed limit (20km/h)",
+      "precision": 0.967741935483871,
+      "recall": 1.0,
+      "f1": 0.9836065573770492,
+      "support": 60
+    },
+    {
+      "class_id": 1,
+      "name": "Speed limit (30km/h)",
+      "precision": 0.9741847826086957,
+      "recall": 0.9958333333333333,
+      "f1": 0.9848901098901099,
+      "support": 720
+    },
+    {
+      "class_id": 2,
+      "name": "Speed limit (50km/h)",
+      "precision": 0.9446589446589446,
+      "recall": 0.9786666666666667,
+      "f1": 0.9613621480026195,
+      "support": 750
+    },
+    {
+      "class_id": 3,
+      "name": "Speed limit (60km/h)",
+      "precision": 0.9927884615384616,
+      "recall": 0.9177777777777778,
+      "f1": 0.953810623556582,
+      "support": 450
+    },
+    {
+      "class_id": 4,
+      "name": "Speed limit (70km/h)",
+      "precision": 0.9984520123839009,
+      "recall": 0.9772727272727273,
+      "f1": 0.9877488514548239,
+      "support": 660
+    },
+    {
+      "class_id": 5,
+      "name": "Speed limit (80km/h)",
+      "precision": 0.9086687306501547,
+      "recall": 0.9317460317460318,
+      "f1": 0.9200626959247649,
+      "support": 630
+    },
+    {
+      "class_id": 6,
+      "name": "End of speed limit (80km/h)",
+      "precision": 0.9767441860465116,
+      "recall": 0.84,
+      "f1": 0.9032258064516129,
+      "support": 150
+    },
+    {
+      "class_id": 7,
+      "name": "Speed limit (100km/h)",
+      "precision": 0.9288702928870293,
+      "recall": 0.9866666666666667,
+      "f1": 0.9568965517241379,
+      "support": 450
+    },
+    {
+      "class_id": 8,
+      "name": "Speed limit (120km/h)",
+      "precision": 0.9767441860465116,
+      "recall": 0.9333333333333333,
+      "f1": 0.9545454545454546,
+      "support": 450
+    },
+    {
+      "class_id": 9,
+      "name": "No passing",
+      "precision": 0.9914529914529915,
+      "recall": 0.9666666666666667,
+      "f1": 0.9789029535864979,
+      "support": 480
+    },
+    {
+      "class_id": 10,
+      "name": "No passing for vehicles over 3.5t",
+      "precision": 0.9939485627836612,
+      "recall": 0.9954545454545455,
+      "f1": 0.9947009841029523,
+      "support": 660
+    },
+    {
+      "class_id": 11,
+      "name": "Right-of-way at next intersection",
+      "precision": 0.9880668257756563,
+      "recall": 0.9857142857142858,
+      "f1": 0.9868891537544696,
+      "support": 420
+    },
+    {
+      "class_id": 12,
+      "name": "Priority road",
+      "precision": 0.9927007299270073,
+      "recall": 0.9855072463768116,
+      "f1": 0.9890909090909091,
+      "support": 690
+    },
+    {
+      "class_id": 13,
+      "name": "Yield",
+      "precision": 0.991701244813278,
+      "recall": 0.9958333333333333,
+      "f1": 0.9937629937629938,
+      "support": 720
+    },
+    {
+      "class_id": 14,
+      "name": "Stop",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 270
+    },
+    {
+      "class_id": 15,
+      "name": "No vehicles",
+      "precision": 0.9720930232558139,
+      "recall": 0.9952380952380953,
+      "f1": 0.9835294117647059,
+      "support": 210
+    },
+    {
+      "class_id": 16,
+      "name": "Vehicles over 3.5t prohibited",
+      "precision": 0.9259259259259259,
+      "recall": 1.0,
+      "f1": 0.9615384615384616,
+      "support": 150
+    },
+    {
+      "class_id": 17,
+      "name": "No entry",
+      "precision": 1.0,
+      "recall": 0.9305555555555556,
+      "f1": 0.9640287769784173,
+      "support": 360
+    },
+    {
+      "class_id": 18,
+      "name": "General caution",
+      "precision": 0.9225,
+      "recall": 0.9461538461538461,
+      "f1": 0.9341772151898734,
+      "support": 390
+    },
+    {
+      "class_id": 19,
+      "name": "Dangerous curve to the left",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 60
+    },
+    {
+      "class_id": 20,
+      "name": "Dangerous curve to the right",
+      "precision": 0.967741935483871,
+      "recall": 1.0,
+      "f1": 0.9836065573770492,
+      "support": 90
+    },
+    {
+      "class_id": 21,
+      "name": "Double curve",
+      "precision": 0.8333333333333334,
+      "recall": 0.6666666666666666,
+      "f1": 0.7407407407407407,
+      "support": 90
+    },
+    {
+      "class_id": 22,
+      "name": "Bumpy road",
+      "precision": 0.9732142857142857,
+      "recall": 0.9083333333333333,
+      "f1": 0.9396551724137931,
+      "support": 120
+    },
+    {
+      "class_id": 23,
+      "name": "Slippery road",
+      "precision": 0.8823529411764706,
+      "recall": 1.0,
+      "f1": 0.9375,
+      "support": 150
+    },
+    {
+      "class_id": 24,
+      "name": "Road narrows on the right",
+      "precision": 0.9368421052631579,
+      "recall": 0.9888888888888889,
+      "f1": 0.9621621621621622,
+      "support": 90
+    },
+    {
+      "class_id": 25,
+      "name": "Road work",
+      "precision": 0.9641350210970464,
+      "recall": 0.9520833333333333,
+      "f1": 0.9580712788259959,
+      "support": 480
+    },
+    {
+      "class_id": 26,
+      "name": "Traffic signals",
+      "precision": 0.9625668449197861,
+      "recall": 1.0,
+      "f1": 0.9809264305177112,
+      "support": 180
+    },
+    {
+      "class_id": 27,
+      "name": "Pedestrians",
+      "precision": 0.8863636363636364,
+      "recall": 0.65,
+      "f1": 0.75,
+      "support": 60
+    },
+    {
+      "class_id": 28,
+      "name": "Children crossing",
+      "precision": 0.9931972789115646,
+      "recall": 0.9733333333333334,
+      "f1": 0.9831649831649831,
+      "support": 150
+    },
+    {
+      "class_id": 29,
+      "name": "Bicycles crossing",
+      "precision": 0.8787878787878788,
+      "recall": 0.9666666666666667,
+      "f1": 0.9206349206349206,
+      "support": 90
+    },
+    {
+      "class_id": 30,
+      "name": "Beware of ice/snow",
+      "precision": 0.9863013698630136,
+      "recall": 0.96,
+      "f1": 0.972972972972973,
+      "support": 150
+    },
+    {
+      "class_id": 31,
+      "name": "Wild animals crossing",
+      "precision": 0.9886363636363636,
+      "recall": 0.9666666666666667,
+      "f1": 0.9775280898876404,
+      "support": 270
+    },
+    {
+      "class_id": 32,
+      "name": "End of all speed and passing limits",
+      "precision": 0.9523809523809523,
+      "recall": 1.0,
+      "f1": 0.975609756097561,
+      "support": 60
+    },
+    {
+      "class_id": 33,
+      "name": "Turn right ahead",
+      "precision": 0.963302752293578,
+      "recall": 1.0,
+      "f1": 0.9813084112149533,
+      "support": 210
+    },
+    {
+      "class_id": 34,
+      "name": "Turn left ahead",
+      "precision": 0.975609756097561,
+      "recall": 1.0,
+      "f1": 0.9876543209876543,
+      "support": 120
+    },
+    {
+      "class_id": 35,
+      "name": "Ahead only",
+      "precision": 0.9973404255319149,
+      "recall": 0.9615384615384616,
+      "f1": 0.97911227154047,
+      "support": 390
+    },
+    {
+      "class_id": 36,
+      "name": "Go straight or right",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 120
+    },
+    {
+      "class_id": 37,
+      "name": "Go straight or left",
+      "precision": 0.9672131147540983,
+      "recall": 0.9833333333333333,
+      "f1": 0.9752066115702479,
+      "support": 60
+    },
+    {
+      "class_id": 38,
+      "name": "Keep right",
+      "precision": 0.9841269841269841,
+      "recall": 0.9884057971014493,
+      "f1": 0.9862617498192335,
+      "support": 690
+    },
+    {
+      "class_id": 39,
+      "name": "Keep left",
+      "precision": 0.9882352941176471,
+      "recall": 0.9333333333333333,
+      "f1": 0.96,
+      "support": 90
+    },
+    {
+      "class_id": 40,
+      "name": "Roundabout mandatory",
+      "precision": 0.8888888888888888,
+      "recall": 0.9777777777777777,
+      "f1": 0.9312169312169312,
+      "support": 90
+    },
+    {
+      "class_id": 41,
+      "name": "End of no passing",
+      "precision": 1.0,
+      "recall": 0.9833333333333333,
+      "f1": 0.9915966386554622,
+      "support": 60
+    },
+    {
+      "class_id": 42,
+      "name": "End of no passing by vehicles over 3.5t",
+      "precision": 0.7857142857142857,
+      "recall": 0.9777777777777777,
+      "f1": 0.8712871287128713,
+      "support": 90
+    }
+  ],
+  "top_confusions": [
+    {
+      "true_id": 8,
+      "true_name": "Speed limit (120km/h)",
+      "pred_id": 5,
+      "pred_name": "Speed limit (80km/h)",
+      "count": 29,
+      "pct_of_true": 6.44
+    },
+    {
+      "true_id": 21,
+      "true_name": "Double curve",
+      "pred_id": 18,
+      "pred_name": "General caution",
+      "count": 27,
+      "pct_of_true": 30.0
+    },
+    {
+      "true_id": 5,
+      "true_name": "Speed limit (80km/h)",
+      "pred_id": 2,
+      "pred_name": "Speed limit (50km/h)",
+      "count": 23,
+      "pct_of_true": 3.65
+    },
+    {
+      "true_id": 6,
+      "true_name": "End of speed limit (80km/h)",
+      "pred_id": 42,
+      "pred_name": "End of no passing by vehicles over 3.5t",
+      "count": 23,
+      "pct_of_true": 15.33
+    },
+    {
+      "true_id": 3,
+      "true_name": "Speed limit (60km/h)",
+      "pred_id": 5,
+      "pred_name": "Speed limit (80km/h)",
+      "count": 20,
+      "pct_of_true": 4.44
+    },
+    {
+      "true_id": 17,
+      "true_name": "No entry",
+      "pred_id": 7,
+      "pred_name": "Speed limit (100km/h)",
+      "count": 17,
+      "pct_of_true": 4.72
+    },
+    {
+      "true_id": 2,
+      "true_name": "Speed limit (50km/h)",
+      "pred_id": 1,
+      "pred_name": "Speed limit (30km/h)",
+      "count": 12,
+      "pct_of_true": 1.6
+    },
+    {
+      "true_id": 5,
+      "true_name": "Speed limit (80km/h)",
+      "pred_id": 7,
+      "pred_name": "Speed limit (100km/h)",
+      "count": 12,
+      "pct_of_true": 1.9
+    },
+    {
+      "true_id": 27,
+      "true_name": "Pedestrians",
+      "pred_id": 23,
+      "pred_name": "Slippery road",
+      "count": 12,
+      "pct_of_true": 20.0
+    },
+    {
+      "true_id": 3,
+      "true_name": "Speed limit (60km/h)",
+      "pred_id": 2,
+      "pred_name": "Speed limit (50km/h)",
+      "count": 11,
+      "pct_of_true": 2.44
+    },
+    {
+      "true_id": 9,
+      "true_name": "No passing",
+      "pred_id": 16,
+      "pred_name": "Vehicles over 3.5t prohibited",
+      "count": 11,
+      "pct_of_true": 2.29
+    },
+    {
+      "true_id": 22,
+      "true_name": "Bumpy road",
+      "pred_id": 25,
+      "pred_name": "Road work",
+      "count": 11,
+      "pct_of_true": 9.17
+    },
+    {
+      "true_id": 25,
+      "true_name": "Road work",
+      "pred_id": 29,
+      "pred_name": "Bicycles crossing",
+      "count": 7,
+      "pct_of_true": 1.46
+    },
+    {
+      "true_id": 35,
+      "true_name": "Ahead only",
+      "pred_id": 38,
+      "pred_name": "Keep right",
+      "count": 7,
+      "pct_of_true": 1.79
+    },
+    {
+      "true_id": 27,
+      "true_name": "Pedestrians",
+      "pred_id": 25,
+      "pred_name": "Road work",
+      "count": 6,
+      "pct_of_true": 10.0
+    },
+    {
+      "true_id": 38,
+      "true_name": "Keep right",
+      "pred_id": 40,
+      "pred_name": "Roundabout mandatory",
+      "count": 6,
+      "pct_of_true": 0.87
+    },
+    {
+      "true_id": 4,
+      "true_name": "Speed limit (70km/h)",
+      "pred_id": 2,
+      "pred_name": "Speed limit (50km/h)",
+      "count": 5,
+      "pct_of_true": 0.76
+    },
+    {
+      "true_id": 12,
+      "true_name": "Priority road",
+      "pred_id": 15,
+      "pred_name": "No vehicles",
+      "count": 5,
+      "pct_of_true": 0.72
+    },
+    {
+      "true_id": 18,
+      "true_name": "General caution",
+      "pred_id": 21,
+      "pred_name": "Double curve",
+      "count": 5,
+      "pct_of_true": 1.28
+    },
+    {
+      "true_id": 18,
+      "true_name": "General caution",
+      "pred_id": 24,
+      "pred_name": "Road narrows on the right",
+      "count": 5,
+      "pct_of_true": 1.28
+    }
+  ]
+}

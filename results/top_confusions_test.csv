@@ -1,0 +1,21 @@
+true_id,true_name,pred_id,pred_name,count,pct_of_true
+8,Speed limit (120km/h),5,Speed limit (80km/h),29,6.44
+21,Double curve,18,General caution,27,30.0
+5,Speed limit (80km/h),2,Speed limit (50km/h),23,3.65
+6,End of speed limit (80km/h),42,End of no passing by vehicles over 3.5t,23,15.33
+3,Speed limit (60km/h),5,Speed limit (80km/h),20,4.44
+17,No entry,7,Speed limit (100km/h),17,4.72
+2,Speed limit (50km/h),1,Speed limit (30km/h),12,1.6
+5,Speed limit (80km/h),7,Speed limit (100km/h),12,1.9
+27,Pedestrians,23,Slippery road,12,20.0
+3,Speed limit (60km/h),2,Speed limit (50km/h),11,2.44
+9,No passing,16,Vehicles over 3.5t prohibited,11,2.29
+22,Bumpy road,25,Road work,11,9.17
+25,Road work,29,Bicycles crossing,7,1.46
+35,Ahead only,38,Keep right,7,1.79
+27,Pedestrians,25,Road work,6,10.0
+38,Keep right,40,Roundabout mandatory,6,0.87
+4,Speed limit (70km/h),2,Speed limit (50km/h),5,0.76
+12,Priority road,15,No vehicles,5,0.72
+18,General caution,21,Double curve,5,1.28
+18,General caution,24,Road narrows on the right,5,1.28

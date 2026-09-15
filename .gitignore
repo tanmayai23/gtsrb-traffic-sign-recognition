@@ -1,0 +1,24 @@
+# Dataset: ~365 MB of archives plus ~52k extracted images.
+# Recreate with: python -m src.cli prepare
+data/
+
+# Training artefacts. checkpoints/best.pt is force-added (see README) so the
+# project can be evaluated without retraining.
+checkpoints/*
+!checkpoints/best.pt
+results/run.log
+
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.ipynb_checkpoints/
+
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
