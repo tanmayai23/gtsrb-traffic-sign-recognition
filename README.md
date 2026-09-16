@@ -445,7 +445,7 @@ images. `python -m src.cli prepare` recreates it exactly.
 python -m unittest discover tests -v
 ```
 
-45 tests covering:
+50 tests covering:
 
 - **split logic** (`test_split_logic.py`) — runs on synthetic data, so the
   central claim is verifiable on a fresh clone with no dataset downloaded:
@@ -461,9 +461,12 @@ python -m unittest discover tests -v
   bias, gradient flow
 - **Grad-CAM** — map shape and normalisation, hook cleanup, correct behaviour in
   eval mode
+- **sample integrity** — the shipped `.ppm` images survive a git checkout
+  byte-exact. A PPM has an ASCII header before binary pixels, so git can mistake
+  it for text and rewrite line endings, silently altering pixel data.
 
 Only `test_split_integrity.py` needs the dataset and skips without it. The
-other 38 tests — including the synthetic split-logic suite — run on a bare
+other 43 tests — including the synthetic split-logic suite — run on a bare
 clone, so a reviewer can verify the core claims in under a second.
 
 ---
