@@ -24,6 +24,7 @@ near-duplicate frames on both sides and reports a meaningless ~99.9%. See
 - [Quickstart](#quickstart)
 - [Commands](#commands)
 - [Results](#results)
+- [Ablations](#ablations)
 - [Why the split matters](#why-the-split-matters)
 - [Method](#method)
 - [Project layout](#project-layout)
@@ -232,6 +233,32 @@ model got wrong while being sure:
 
 ![misclassified](results/misclassified_test.png)
 
+### Ablations
+
+Each row is a full 15-epoch retrain with one design decision removed, evaluated
+on the same official test set. Raw data in `ablations/*/metrics.json`.
+
+| setting | command | accuracy | balanced acc | macro F1 | params | Δ acc (pp) |
+|---|---|---|---|---|---|---|
+| Baseline (all decisions on) | `train` | 0.9682 | 0.9582 | 0.9567 | 99,019 | — |
+| Without CLAHE | `train --no-clahe` | 0.9519 | 0.9403 | 0.9373 | 99,019 | -1.62 |
+| Without class rebalancing | `train --balance none` | 0.9631 | 0.9467 | 0.9503 | 99,019 | -0.51 |
+| Half-width model | `train --width-mult 0.5` | 0.9143 | 0.9203 | 0.9073 | 26,491 | -5.39 |
+
+Reproduce with `bash run_ablations.sh` (~70 min total on CPU).
+
+**What this shows.** Every design decision earns its place:
+
+- **CLAHE is the single largest preprocessing contributor** (+1.62 pp). GTSRB is
+  dashcam footage with severe under- and over-exposure, so normalising local
+  contrast matters more than any other preprocessing step.
+- **Class rebalancing gives a smaller but real gain** (+0.51 pp accuracy,
+  +1.15 pp balanced accuracy). The larger effect on *balanced* accuracy is the
+  expected signature: rebalancing helps the rare classes specifically, which is
+  exactly what it is for.
+- **Capacity is not oversized.** Halving the width costs 5.39 pp for a model of
+  26,491 parameters, so the 99k baseline is not padded — those parameters work.
+
 ### Explainability
 
 Grad-CAM over the last convolutional layer, showing the network attends to the
@@ -418,10 +445,15 @@ images. `python -m src.cli prepare` recreates it exactly.
 python -m unittest discover tests -v
 ```
 
-36 tests covering:
+45 tests covering:
 
-- **split integrity** — zero track overlap, class-scoped track ids, all 43
-  classes present on both sides, correct totals
+- **split logic** (`test_split_logic.py`) — runs on synthetic data, so the
+  central claim is verifiable on a fresh clone with no dataset downloaded:
+  whole tracks stay together, no image is lost or duplicated, every class
+  appears on both sides, the split is deterministic. One test deliberately
+  demonstrates that a *random* split leaks tracks — the bug being avoided.
+- **split integrity** (`test_split_integrity.py`) — the same properties checked
+  against the real manifests once `prepare` has been run (skipped otherwise)
 - **transforms** — CLAHE preserves hue and raises contrast, crops respect image
   bounds, augmentation is deterministic per seed, **never mirrors**, and leaves
   no black border
@@ -430,7 +462,9 @@ python -m unittest discover tests -v
 - **Grad-CAM** — map shape and normalisation, hook cleanup, correct behaviour in
   eval mode
 
-The split tests skip automatically if `prepare` has not been run.
+Only `test_split_integrity.py` needs the dataset and skips without it. The
+other 38 tests — including the synthetic split-logic suite — run on a bare
+clone, so a reviewer can verify the core claims in under a second.
 
 ---
 

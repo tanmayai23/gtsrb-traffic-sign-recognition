@@ -1,0 +1,19 @@
+[evaluate] checkpoint ablations\half_width\best.pt
+[evaluate] trained 15 epochs, val acc 0.9254
+[evaluate] split=test device=cpu threads=8
+[evaluate] 12630 images
+  accuracy           0.9143
+  balanced accuracy  0.9203
+  macro F1           0.9073
+  weighted F1        0.9139
+  top-5 accuracy     0.9917
+  inference          0.162 ms/image
+  most frequent confusions:
+     5 ->  2   137x  (Speed limit (80km/h) -> Speed limit (50km/h))
+     3 ->  5    54x  (Speed limit (60km/h) -> Speed limit (80km/h))
+     2 ->  5    53x  (Speed limit (50km/h) -> Speed limit (80km/h))
+     2 ->  1    37x  (Speed limit (50km/h) -> Speed limit (30km/h))
+     5 ->  3    35x  (Speed limit (80km/h) -> Speed limit (60km/h))
+[evaluate] writing figures
+TEST ACCURACY: 0.9143
+[evaluate] metrics written to ablations\half_width\metrics.json

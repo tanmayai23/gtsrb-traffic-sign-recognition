@@ -1,0 +1,19 @@
+[evaluate] checkpoint ablations\no_clahe\best.pt
+[evaluate] trained 15 epochs, val acc 0.9626
+[evaluate] split=test device=cpu threads=8
+[evaluate] 12630 images
+  accuracy           0.9519
+  balanced accuracy  0.9403
+  macro F1           0.9373
+  weighted F1        0.9517
+  top-5 accuracy     0.9941
+  inference          0.418 ms/image
+  most frequent confusions:
+     2 ->  1    42x  (Speed limit (50km/h) -> Speed limit (30km/h))
+     2 ->  5    38x  (Speed limit (50km/h) -> Speed limit (80km/h))
+    27 -> 23    29x  (Pedestrians -> Slippery road)
+     4 ->  1    27x  (Speed limit (70km/h) -> Speed limit (30km/h))
+    22 -> 25    27x  (Bumpy road -> Road work)
+[evaluate] writing figures
+TEST ACCURACY: 0.9519
+[evaluate] metrics written to ablations\no_clahe\metrics.json

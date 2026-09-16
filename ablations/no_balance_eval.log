@@ -1,0 +1,19 @@
+[evaluate] checkpoint ablations\no_balance\best.pt
+[evaluate] trained 10 epochs, val acc 0.9826
+[evaluate] split=test device=cpu threads=8
+[evaluate] 12630 images
+  accuracy           0.9631
+  balanced accuracy  0.9467
+  macro F1           0.9503
+  weighted F1        0.9628
+  top-5 accuracy     0.9959
+  inference          0.323 ms/image
+  most frequent confusions:
+     3 ->  5    33x  (Speed limit (60km/h) -> Speed limit (80km/h))
+     8 ->  5    30x  (Speed limit (120km/h) -> Speed limit (80km/h))
+    17 ->  7    25x  (No entry -> Speed limit (100km/h))
+    22 -> 25    23x  (Bumpy road -> Road work)
+    21 -> 18    18x  (Double curve -> General caution)
+[evaluate] writing figures
+TEST ACCURACY: 0.9631
+[evaluate] metrics written to ablations\no_balance\metrics.json
