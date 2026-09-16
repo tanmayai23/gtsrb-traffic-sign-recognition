@@ -1,0 +1,23 @@
+# Normalise text files to LF in the repository.
+* text=auto eol=lf
+
+# Binary formats must never be line-ending converted.
+#
+# .ppm is the trap here: a PPM begins with an ASCII header ("P6\n32 32\n255\n")
+# followed by raw pixel bytes, so git's heuristic can classify it as text and
+# rewrite LF to CRLF on a Windows checkout. That injects bytes into the pixel
+# data and silently changes what the image contains -- enough to flip a
+# prediction. Marking these binary is required for correctness, not tidiness.
+*.ppm   binary
+*.pgm   binary
+*.ppm   -text
+*.pt    binary
+*.pth   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.zip   binary
+*.pkl   binary
+
+# Shell scripts need LF even on Windows checkouts.
+*.sh    text eol=lf
