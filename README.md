@@ -25,6 +25,7 @@ near-duplicate frames on both sides and reports a meaningless ~99.9%. See
 - [Commands](#commands)
 - [Results](#results)
 - [Ablations](#ablations)
+- [Project report](#project-report)
 - [Why the split matters](#why-the-split-matters)
 - [Method](#method)
 - [Project layout](#project-layout)
@@ -128,6 +129,7 @@ python -m src.cli <command> --help
 | `predict` | classify a single image |
 | `gradcam` | save a Grad-CAM heatmap explaining one prediction |
 | `figures` | write the preprocessing and augmentation figures |
+| `report` | regenerate every report figure and build the report (HTML + PDF) |
 | `info` | environment and project status |
 | `classes` | list the 43 class ids and names |
 
@@ -161,6 +163,7 @@ Expected runtimes on a 12-core CPU:
 | `train` | ~20 min for 15 epochs |
 | `train --quick` | < 1 min |
 | `evaluate` | ~1 min |
+| `report` | ~20 s |
 | `predict` / `gradcam` | < 5 s |
 
 ---
@@ -270,6 +273,26 @@ Full artefacts: `results/metrics.json`, `results/per_class_metrics_test.csv`,
 `results/top_confusions_test.csv`, `results/classification_report_test.txt`.
 
 <!-- RESULTS_END -->
+
+---
+
+## Project report
+
+A full write-up is included, covering method, results, error analysis, ablations
+and limitations:
+
+- **[`report/GTSRB_Project_Report.pdf`](report/GTSRB_Project_Report.pdf)** — 16 pages
+- [`report/report.html`](report/report.html) — the same document, figures embedded
+
+Rebuild both from the current metrics with:
+
+```bash
+python -m src.cli report
+```
+
+Every number and figure in the report is read from `results/metrics.json` and the
+ablation runs, so it cannot drift from the code. PDF export uses Chrome or Edge
+if one is installed; otherwise the HTML prints to PDF from any browser.
 
 ---
 
