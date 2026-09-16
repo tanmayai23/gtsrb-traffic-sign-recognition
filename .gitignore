@@ -22,3 +22,6 @@ env/
 *.swp
 .DS_Store
 Thumbs.db
+
+# Ablation runs: keep the metrics, not the 1.2 MB checkpoints each produces.
+ablations/**/*.pt
