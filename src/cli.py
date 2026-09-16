@@ -116,13 +116,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--results", type=Path, default=RESULTS_DIR)
     p.add_argument("--img-size", type=int, default=32)
 
-    # ---- report ----
-    p = sub.add_parser("report", help="build the project report (HTML + PDF)",
-                       description="Regenerate report figures and build the report. "
-                                   "PDF export needs Chrome or Edge installed.")
+    # ---- report-figures ----
+    p = sub.add_parser("report-figures",
+                       help="write the report-specific figures",
+                       description="Regenerate the figures the written report references.")
     _add_common(p)
-    p.add_argument("--no-pdf", action="store_true",
-                   help="write only the HTML (print it to PDF yourself)")
 
     # ---- info ----
     p = sub.add_parser("info", help="print environment and project status")
@@ -223,39 +221,9 @@ def cmd_figures(args) -> int:
     return 0
 
 
-def cmd_report(args) -> int:
-    from .build_report import build
+def cmd_report_figures(args) -> int:
     from .report_figures import main as figures_main
-
-    figures_main()
-    html = build()
-
-    if args.no_pdf:
-        return 0
-
-    pdf = html.parent / "GTSRB_Project_Report.pdf"
-    browsers = [
-        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-        r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
-        r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
-        "/usr/bin/google-chrome", "/usr/bin/chromium",
-        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-    ]
-    exe = next((b for b in browsers if Path(b).exists()), None)
-    if exe is None:
-        print("\n[report] no Chrome/Edge found for PDF export.")
-        print(f"[report] open {html} in a browser and print to PDF.")
-        return 0
-
-    import subprocess
-    subprocess.run([exe, "--headless", "--disable-gpu", "--no-sandbox",
-                    "--no-pdf-header-footer", f"--print-to-pdf={pdf}",
-                    html.resolve().as_uri()],
-                   capture_output=True, timeout=300)
-    if pdf.exists():
-        print(f"[report] wrote {pdf}  ({pdf.stat().st_size / 1e6:.1f} MB)")
-    return 0
+    return figures_main()
 
 
 def cmd_info(args) -> int:
@@ -315,7 +283,7 @@ def cmd_classes(args) -> int:
 HANDLERS = {
     "prepare": cmd_prepare, "train": cmd_train, "evaluate": cmd_evaluate,
     "predict": cmd_predict, "gradcam": cmd_gradcam, "figures": cmd_figures,
-    "report": cmd_report, "info": cmd_info, "classes": cmd_classes,
+    "report-figures": cmd_report_figures, "info": cmd_info, "classes": cmd_classes,
 }
 
 
