@@ -10,6 +10,7 @@ cannot drift from the code that produced it.
 from __future__ import annotations
 
 import base64
+import io
 import json
 import subprocess
 from pathlib import Path
@@ -33,11 +34,47 @@ BROWSERS = [
 ]
 
 
-def embed(path: Path) -> str:
+# The submission portal caps the report at 1 MB, so figures are downscaled and
+# recompressed on the way into the document. Originals in results/ are untouched.
+#
+# JPEG, not WebP or PNG: Chrome embeds JPEG data directly when printing to PDF,
+# so the output tracks the input size. WebP compresses ~2x better on disk but
+# Chrome decodes and re-embeds it, which took the same report from 1.9 MB to
+# 6.6 MB. Measured, not assumed.
+#
+# 900 px is wider than the print column (about 165 mm, ~1300 px at 200 dpi, but
+# figures render at well under full width), and q75 shows no visible artefacts
+# on these plots. Result: ~0.87 MB, leaving headroom under the cap.
+MAX_WIDTH_PX = 900
+JPEG_QUALITY = 75
+
+
+def embed(path: Path, max_width: int = MAX_WIDTH_PX, quality: int = JPEG_QUALITY) -> str:
+    """Return a data URI for `path`, downscaled and recompressed to fit the cap.
+
+    Falls back to the raw PNG bytes if anything about the conversion fails.
+    """
     path = Path(path)
     if not path.exists():
         return ""
-    return "data:image/png;base64," + base64.b64encode(path.read_bytes()).decode("ascii")
+
+    try:
+        from PIL import Image
+
+        with Image.open(path) as im:
+            im = im.convert("RGB")  # drop alpha; the report background is white
+            if im.width > max_width:
+                h = round(im.height * max_width / im.width)
+                im = im.resize((max_width, h), Image.LANCZOS)
+
+            buf = io.BytesIO()
+            im.save(buf, format="JPEG", quality=quality,
+                    optimize=True, progressive=True)
+            data = buf.getvalue()
+
+        return "data:image/jpeg;base64," + base64.b64encode(data).decode("ascii")
+    except Exception:
+        return "data:image/png;base64," + base64.b64encode(path.read_bytes()).decode("ascii")
 
 
 def figure(path: Path, number: int, caption: str, width: str = "100%") -> str:
@@ -736,7 +773,7 @@ Dataset courtesy of the Institut für Neuroinformatik, Ruhr-Universität Bochum.
 
     out = ensure_dir(REPORT_DIR) / "report.html"
     out.write_text(html, encoding="utf-8")
-    print(f"[report] wrote {out}  ({out.stat().st_size / 1e6:.1f} MB, figures embedded)")
+    print(f"[report] wrote {out}  ({out.stat().st_size / 1e6:.2f} MB, figures embedded)")
     return out
 
 
