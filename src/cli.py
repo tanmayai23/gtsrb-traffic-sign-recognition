@@ -122,6 +122,20 @@ def build_parser() -> argparse.ArgumentParser:
                        description="Regenerate the figures the written report references.")
     _add_common(p)
 
+    # ---- design-figures ----
+    p = sub.add_parser("design-figures",
+                       help="write the design diagrams (architecture, UML)",
+                       description="Regenerate the architecture, workflow, use case, "
+                                   "class and sequence diagrams from code.")
+    _add_common(p)
+
+    # ---- build-report ----
+    p = sub.add_parser("build-report",
+                       help="build the project report (HTML + PDF)",
+                       description="Rebuild the report, reading every number from "
+                                   "the current metrics.json.")
+    _add_common(p)
+
     # ---- info ----
     p = sub.add_parser("info", help="print environment and project status")
     _add_common(p)
@@ -226,6 +240,16 @@ def cmd_report_figures(args) -> int:
     return figures_main()
 
 
+def cmd_design_figures(args) -> int:
+    from .design_figures import main as design_main
+    return design_main()
+
+
+def cmd_build_report(args) -> int:
+    from .build_report import main as build_main
+    return build_main()
+
+
 def cmd_info(args) -> int:
     import torch
 
@@ -283,7 +307,8 @@ def cmd_classes(args) -> int:
 HANDLERS = {
     "prepare": cmd_prepare, "train": cmd_train, "evaluate": cmd_evaluate,
     "predict": cmd_predict, "gradcam": cmd_gradcam, "figures": cmd_figures,
-    "report-figures": cmd_report_figures, "info": cmd_info, "classes": cmd_classes,
+    "report-figures": cmd_report_figures, "design-figures": cmd_design_figures,
+    "build-report": cmd_build_report, "info": cmd_info, "classes": cmd_classes,
 }
 
 

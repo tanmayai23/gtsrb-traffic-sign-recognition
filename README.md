@@ -25,7 +25,7 @@ near-duplicate frames on both sides and reports a meaningless ~99.9%. See
 - [Commands](#commands)
 - [Results](#results)
 - [Ablations](#ablations)
-- [Project report](#project-report)
+- [Documentation](#documentation)
 - [Why the split matters](#why-the-split-matters)
 - [Method](#method)
 - [Project layout](#project-layout)
@@ -129,6 +129,9 @@ python -m src.cli <command> --help
 | `predict` | classify a single image |
 | `gradcam` | save a Grad-CAM heatmap explaining one prediction |
 | `figures` | write the preprocessing and augmentation figures |
+| `report-figures` | write the report-specific result figures |
+| `design-figures` | write the architecture and UML diagrams |
+| `build-report` | build the project report (HTML + PDF) |
 | `info` | environment and project status |
 | `classes` | list the 43 class ids and names |
 
@@ -274,21 +277,53 @@ Full artefacts: `results/metrics.json`, `results/per_class_metrics_test.csv`,
 
 ---
 
-## Project report
+## Documentation
 
-The written report is authored by me. This repository provides the material it is
-built from:
+| document | what it covers |
+|---|---|
+| [`statement.md`](statement.md) | problem statement, scope, target users, high-level features |
+| [`REQUIREMENTS.md`](REQUIREMENTS.md) | functional requirements by module and eight non-functional requirements, each traced to the code that implements it and the test that checks it |
+| [`report/GTSRB_Project_Report.pdf`](report/GTSRB_Project_Report.pdf) | the full project report — design, diagrams, results, testing, learnings |
+| [`report_notes.md`](report_notes.md) | working notes with all measured values |
+| [`WRITING_KIT.md`](WRITING_KIT.md) | per-section facts, figures and word targets |
 
-- [`WRITING_KIT.md`](WRITING_KIT.md) — per-section facts, figures and word targets
-- [`report_notes.md`](report_notes.md) — working notes with all measured values
-- `results/` and `results/report/` — the twelve figures the report references
+### Design diagrams
 
-Regenerate every figure from the current metrics:
+These are **generated from code**
+([`src/design_figures.py`](src/design_figures.py)) rather than drawn by hand, for
+the same reason the result figures are: a diagram exported from a drawing tool
+drifts as soon as the code moves and nobody notices.
+
+Dependencies point downward only — no module calls upward into a higher layer:
+
+![system architecture](results/design/system_architecture.png)
+
+The pipeline, with the two decision points that genuinely branch:
+
+![workflow](results/design/workflow.png)
+
+<details>
+<summary>Use case, class/component and sequence diagrams</summary>
+
+![use case](results/design/use_case.png)
+
+![class diagram](results/design/class_diagram.png)
+
+![sequence diagram](results/design/sequence_training.png)
+
+</details>
+
+### Rebuilding everything
 
 ```bash
-python -m src.cli evaluate      # metrics + core figures
-python -m src.report_figures    # report-specific figures
+python -m src.cli evaluate          # metrics + core figures
+python -m src.cli report-figures    # report-specific figures
+python -m src.cli design-figures    # architecture + UML diagrams
+python -m src.cli build-report      # report.html + the PDF
 ```
+
+Every number in the report is read from `results/metrics.json` at build time, so
+the document cannot disagree with the run that produced it.
 
 ---
 
@@ -444,11 +479,17 @@ produce an empty map.
 │   ├── predict.py      single-image inference
 │   ├── gradcam.py      hook-based Grad-CAM
 │   ├── plots.py        every figure (Agg backend, headless-safe)
+│   ├── report_figures.py  figures made specifically for the report
+│   ├── design_figures.py  architecture + UML diagrams, drawn from code
+│   ├── build_report.py    builds report.html and the PDF
 │   └── utils.py        seeding, timing, checkpoint/JSON helpers
 ├── tests/              unittest suite
 ├── results/            metrics.json + figures (committed)
 ├── checkpoints/best.pt trained model (committed, ~1.2 MB)
 ├── samples/            a few test images for the demo commands
+├── report/             the generated report (HTML + PDF)
+├── statement.md        problem statement, scope, users, features
+├── REQUIREMENTS.md     functional + non-functional requirements
 ├── data/               dataset (gitignored; rebuilt by `prepare`)
 └── report_notes.md     working notes
 ```

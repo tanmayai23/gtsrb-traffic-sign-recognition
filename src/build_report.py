@@ -46,17 +46,33 @@ BROWSERS = [
 # figures render at well under full width), and q75 shows no visible artefacts
 # on these plots. Result: ~0.87 MB, leaving headroom under the cap.
 MAX_WIDTH_PX = 900
-JPEG_QUALITY = 75
+JPEG_QUALITY = 64
+# Figures marked compact=True (the design diagrams and the per-class bar
+# chart) render smaller, which is where the size budget for the five extra
+# diagrams comes from. See embed().
+COMPACT_WIDTH_PX = 620
+COMPACT_QUALITY = 66
 
 
-def embed(path: Path, max_width: int = MAX_WIDTH_PX, quality: int = JPEG_QUALITY) -> str:
+def embed(path: Path, max_width: int = MAX_WIDTH_PX, quality: int = JPEG_QUALITY,
+          *, compact: bool = False) -> str:
     """Return a data URI for `path`, downscaled and recompressed to fit the cap.
+
+    `compact` renders a figure at a smaller width and quality. It is for the
+    wide line-art diagrams and the tall per-class bar chart, which stay legible
+    well below full column width and would otherwise dominate the document.
+
+    A palette PNG stores line art ~37% smaller than JPEG on disk, but Chrome
+    decodes and re-embeds PNG when printing, which pushed the PDF to 1.29 MB —
+    the same trap the WebP note above records. So everything stays JPEG.
 
     Falls back to the raw PNG bytes if anything about the conversion fails.
     """
     path = Path(path)
     if not path.exists():
         return ""
+    if compact:
+        max_width, quality = COMPACT_WIDTH_PX, COMPACT_QUALITY
 
     try:
         from PIL import Image
@@ -77,8 +93,9 @@ def embed(path: Path, max_width: int = MAX_WIDTH_PX, quality: int = JPEG_QUALITY
         return "data:image/png;base64," + base64.b64encode(path.read_bytes()).decode("ascii")
 
 
-def figure(path: Path, number: int, caption: str, width: str = "100%") -> str:
-    src = embed(path)
+def figure(path: Path, number: int, caption: str, width: str = "100%",
+           *, compact: bool = False) -> str:
+    src = embed(path, compact=compact)
     if not src:
         return f"<p class='missing'>[missing figure: {Path(path).name}]</p>"
     return (f'<figure><img src="{src}" style="width:{width}" alt="Figure {number}">'
@@ -177,6 +194,7 @@ def build() -> Path:
     fam_pct = 100 * in_family / fam_total
 
     R, G = RESULTS_DIR, RESULTS_DIR / "report"
+    D = RESULTS_DIR / "design"
 
     worst_rows = "\n".join(
         f"<tr><td class='num'>{p['class_id']}</td><td>{p['name']}</td>"
@@ -282,8 +300,13 @@ costs {d_bal:.2f}, and halving the model width costs {d_hw:.2f}.
 <li>Error analysis</li>
 <li>Ablation study</li>
 <li>Explainability</li>
+<li>Requirements</li>
+<li>System architecture and design</li>
+<li>Design decisions and rationale</li>
+<li>Implementation and testing</li>
+<li>Challenges and key learnings</li>
 <li>Limitations and future work</li>
-<li>Reproducibility · 13. Conclusion · 14. References</li>
+<li>Reproducibility · 18. Conclusion · 19. References</li>
 </ol>
 </div>
 
@@ -560,7 +583,8 @@ than failures to recognise a sign at all.
 </p>
 {figure(R / "per_class_f1_test.png", 7,
         "Per-class F1, ascending. Red bars mark classes below 0.90. Performance is high and even across most "
-        "of the 43 classes, with a short tail of difficult ones analysed in Section 8.", "74%")}
+        "of the 43 classes, with a short tail of difficult ones analysed in Section 8.", "74%",
+        compact=True)}
 
 <h2>8. Error analysis</h2>
 <p>
@@ -606,7 +630,8 @@ rare. This also explains the modest return from rebalancing measured in Section 
 </table>
 {figure(R / "misclassified_test.png", 10,
         "The twenty-five errors the model was most confident about. High-confidence mistakes are more "
-        "informative than random ones: they reveal systematic confusions rather than unreadable crops.", "80%")}
+        "informative than random ones: they reveal systematic confusions rather than unreadable crops.", "80%",
+        compact=True)}
 
 <h2 class="pagebreak">9. Ablation study</h2>
 <p>
@@ -680,7 +705,305 @@ three pooling stages, the map is 8×8, so it can show that the model looks at th
 sign but not which stroke of a digit it relies on.
 </p>
 
-<h2>11. Limitations and future work</h2>
+<div class="pagebreak"></div>
+
+<h2>11. Requirements</h2>
+
+<h3>11.1 Functional requirements</h3>
+<p>
+The system is organised into six functional modules. The first three are the
+core pipeline; the remaining three support analysis and reporting. Each
+requirement below is implemented by a named module and checked either by the
+test suite or by a committed artefact.
+</p>
+<table>
+<thead><tr><th>Module</th><th>Requirements</th><th>Implemented in</th></tr></thead>
+<tbody>
+<tr><td><strong>FM-1</strong><br>Data preparation</td>
+    <td>Resumable download and size-checked, zip-slip-safe extraction; parse
+    per-image annotations into <code>(path, class, ROI, track)</code>; group by the
+    composite key <code>(class_id, track_number)</code>; emit a track-disjoint,
+    class-stratified split; assert disjointness at build time.</td>
+    <td><code>download.py</code>, <code>prepare.py</code></td></tr>
+<tr><td><strong>FM-2</strong><br>Training</td>
+    <td>Define the CNN from scratch; apply ROI crop → CLAHE → resize → normalise;
+    augment without ever mirroring; counter class imbalance; compute normalisation
+    statistics from the training split only; train with OneCycle, early stopping
+    and a wall-clock budget; checkpoint the best model with its config.</td>
+    <td><code>model.py</code>, <code>transforms.py</code>, <code>dataset.py</code>,
+    <code>engine.py</code>, <code>train.py</code></td></tr>
+<tr><td><strong>FM-3</strong><br>Evaluation and inference</td>
+    <td>Evaluate on the official test set; report accuracy, balanced accuracy,
+    macro/weighted F1 and top-5; per-class metrics; confusion matrix and ranked
+    confusion pairs; highest-confidence error grid; single-image prediction with a
+    JSON mode; inference latency.</td>
+    <td><code>evaluate.py</code>, <code>predict.py</code>, <code>plots.py</code></td></tr>
+<tr><td><strong>FM-4</strong><br>Explainability</td>
+    <td>Grad-CAM over the last convolutional layer for a chosen or predicted class,
+    using full backward hooks that are removed afterwards.</td>
+    <td><code>gradcam.py</code></td></tr>
+<tr><td><strong>FM-5</strong><br>Ablation study</td>
+    <td>Disable individual design decisions by CLI flag and retrain; write each
+    run's metrics to its own directory for comparison.</td>
+    <td><code>cli.py</code>, <code>config.py</code></td></tr>
+<tr><td><strong>FM-6</strong><br>Reporting and interface</td>
+    <td>Single CLI entry point with per-command help; environment status; regenerate
+    all result figures and design diagrams from code; rebuild this report from the
+    current metrics.</td>
+    <td><code>cli.py</code>, <code>report_figures.py</code>,
+    <code>design_figures.py</code>, <code>build_report.py</code></td></tr>
+</tbody>
+</table>
+
+<p>
+<strong>Input/output structure.</strong> The pipeline is a chain of file-backed
+stages, which is what makes each stage independently re-runnable: the archives
+produce extracted images and manifests; the manifests plus hyperparameters produce
+a checkpoint and a training history; the checkpoint plus the test manifest produce
+<code>metrics.json</code>, CSVs and figures; and a checkpoint plus a single image
+produces a prediction or a heatmap.
+</p>
+
+<h3>11.2 Non-functional requirements</h3>
+<table>
+<thead><tr><th>#</th><th>Requirement</th><th>How it is met, and the evidence</th></tr></thead>
+<tbody>
+<tr><td>NFR-1</td><td><strong>Reproducibility</strong></td>
+    <td>All three RNGs seeded from one <code>--seed</code>; augmentation uses a
+    per-index generator so results hold with parallel loading; the split is a pure
+    function of <code>(seed, val_frac)</code>; checkpoints carry their own config
+    and normalisation statistics. Caveat in Section 17.</td></tr>
+<tr><td>NFR-2</td><td><strong>Correctness of measurement</strong></td>
+    <td>Track-disjoint split asserted in code and tests; the official test set is
+    used only once, for final evaluation; normalisation statistics from training
+    only; imbalance-robust metrics reported beside raw accuracy. Evidence: the
+    validation-to-test gap of {best_val - acc:.2f} points.</td></tr>
+<tr><td>NFR-3</td><td><strong>Resource efficiency</strong></td>
+    <td>CPU-only; {total_min:.0f} min to train; ~96 MB uint8 RAM cache; 99,019
+    parameters in a ~1.2 MB checkpoint; {t['inference_ms_per_image']:.2f} ms per
+    image. <code>--quick</code>, <code>--epochs</code>, <code>--max-minutes</code>,
+    <code>--batch-size</code> and <code>--img-size</code> trade accuracy for
+    time or memory.</td></tr>
+<tr><td>NFR-4</td><td><strong>Reliability and error handling</strong></td>
+    <td>Downloads resume and are size-checked before use; extraction rejects
+    escaping paths; <code>last.pt</code> is written every epoch so an interrupted
+    run is never wasted; the split fails loudly rather than emitting leaking
+    data.</td></tr>
+<tr><td>NFR-5</td><td><strong>Maintainability</strong></td>
+    <td>15 single-purpose modules in four layers with no upward dependencies;
+    configuration centralised in <code>config.py</code>; every figure and diagram
+    generated from code, so documentation cannot silently drift.</td></tr>
+<tr><td>NFR-6</td><td><strong>Testability</strong></td>
+    <td>50 tests; the central claims run on synthetic data and pass on a bare
+    clone; dataset-dependent tests skip rather than fail. See Section 14.</td></tr>
+<tr><td>NFR-7</td><td><strong>Usability</strong></td>
+    <td>One entry point with discoverable subcommands; a committed checkpoint so
+    inference works immediately; <code>info</code> reports environment and data
+    status; documented troubleshooting for the failures that actually occur.</td></tr>
+<tr><td>NFR-8</td><td><strong>Portability</strong></td>
+    <td>Windows, Linux and macOS, with run scripts for PowerShell and bash;
+    pinned dependencies; the headless <code>Agg</code> matplotlib backend;
+    <code>.gitattributes</code> marks <code>.ppm</code> binary so git cannot
+    corrupt sample pixels.</td></tr>
+</tbody>
+</table>
+<p>
+The system processes a public research dataset and exposes no network service,
+authentication or user data, so conventional security requirements largely do not
+apply. The two that do — safe archive extraction and size-checked downloads — are
+treated as reliability requirements above.
+</p>
+
+<div class="pagebreak"></div>
+
+<h2>12. System architecture and design</h2>
+<p>
+The code is arranged in four layers, and dependencies only ever point downward.
+The CLI parses arguments and delegates; the application layer holds one module per
+use case; the domain layer holds the data, model and transform logic that the use
+cases compose; and everything is persisted as plain files rather than a database,
+because every artefact is either a bulk binary (images, weights) or a small
+structured document (manifests, metrics) that benefits from being diffable and
+inspectable without tooling.
+</p>
+{figure(D / "system_architecture.png", 13, "System architecture. Arrows point from a consumer to what it depends on; no module calls upward into a higher layer.", compact=True)}
+
+<p>
+<strong>Storage design.</strong> There is no relational database, so no ER diagram
+applies. The equivalent schema is the manifest record, which is the unit that flows
+through the whole pipeline:
+</p>
+<table>
+<thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><code>path</code></td><td>string</td><td>image location, relative to the data root</td></tr>
+<tr><td><code>class_id</code></td><td>int 0–42</td><td>ground-truth label</td></tr>
+<tr><td><code>track_id</code></td><td>int</td><td>which physical sign — unique only within a class</td></tr>
+<tr><td><code>roi_x1, roi_y1, roi_x2, roi_y2</code></td><td>int</td><td>annotated sign bounding box</td></tr>
+<tr><td><code>width, height</code></td><td>int</td><td>source image dimensions</td></tr>
+</tbody>
+</table>
+<p>
+The composite <code>(class_id, track_id)</code> is the grouping key for the split,
+and the reason it must be composite is given in Section 3. Alongside the manifests,
+<code>split_summary.json</code> records the resulting counts and
+<code>norm_stats.json</code> the training-split channel statistics; both are read
+back by later stages rather than recomputed, so a stage cannot disagree with the
+one before it.
+</p>
+
+{figure(D / "workflow.png", 14, "Process flow. Decision points are the two that genuinely branch: whether the archives are already cached, and whether training should continue.", compact=True)}
+
+{figure(D / "use_case.png", 15, "Use case diagram. The two actors are the researcher who runs the pipeline and the reviewer who verifies it without retraining.", compact=True)}
+
+{figure(D / "class_diagram.png", 16, "Class and component diagram, showing the types that carry state and the relations between them.", compact=True)}
+
+{figure(D / "sequence_training.png", 17, "Sequence diagram for one training epoch, from the command line down to the optimiser step and the conditional checkpoint.", compact=True)}
+
+<div class="pagebreak"></div>
+
+<h2>13. Design decisions and rationale</h2>
+<p>
+The decisions below are the ones where a different choice was plausible. Each is
+recorded with what was rejected and why, since a rationale is only meaningful
+against the alternative.
+</p>
+<table>
+<thead><tr><th>Decision</th><th>Alternative rejected</th><th>Rationale</th></tr></thead>
+<tbody>
+<tr><td><strong>Split by track</strong></td><td>Random split by image</td>
+    <td>The decision the whole project rests on. Consecutive frames of one sign are
+    near-duplicates, so a random split validates on memorised images and inflates
+    the score toward 99.9%. Measured cost: a lower but truthful number.</td></tr>
+<tr><td><strong>Composite <code>(class, track)</code> key</strong></td><td>Bare track number</td>
+    <td>Track numbering restarts at zero inside every class directory, so
+    <code>00000</code> exists in several classes and refers to unrelated signs.
+    A bare key silently merges them.</td></tr>
+<tr><td><strong>CLAHE on the LAB L-channel</strong></td><td>Per-RGB-channel equalisation</td>
+    <td>Equalising channels independently shifts hue, and colour is
+    class-discriminative for traffic signs. Worth {d_clahe:.2f} points (Section 9).</td></tr>
+<tr><td><strong>4×4 CLAHE tiles</strong></td><td>OpenCV's 8×8 default</td>
+    <td>On a 32-pixel crop an 8×8 grid leaves ~4-pixel tiles, which amplifies noise
+    rather than local contrast.</td></tr>
+<tr><td><strong>No flip augmentation</strong></td><td>Horizontal flip, a standard default</td>
+    <td>Mirroring changes what a sign means: turn-left becomes turn-right, and
+    speed-limit digits become unreadable. Actively wrong here, and enforced by a
+    regression test.</td></tr>
+<tr><td><strong>One composed affine warp</strong></td><td>Chained rotate, translate, scale</td>
+    <td>Three sequential warps interpolate three times and visibly smear a 32-pixel
+    image. Composing into a single matrix interpolates once.</td></tr>
+<tr><td><strong><code>BORDER_REPLICATE</code></strong></td><td>Zero-fill borders</td>
+    <td>Black corners correlate perfectly with "this sample was augmented", handing
+    the network a shortcut feature.</td></tr>
+<tr><td><strong>Global average pooling head</strong></td><td>Flatten → Linear</td>
+    <td>Drops ~88k parameters, makes the network accept any input size without code
+    changes, and is the canonical arrangement for class activation maps.</td></tr>
+<tr><td><strong><code>bias=False</code> in convolutions</strong></td><td>Default bias</td>
+    <td>The BatchNorm immediately after re-centres the output, making a conv bias
+    mathematically redundant.</td></tr>
+<tr><td><strong>Self-describing checkpoints</strong></td><td>Weights only</td>
+    <td>Carrying the config, class names and normalisation statistics means
+    <code>predict</code> and <code>evaluate</code> cannot be run with flags that
+    silently mismatch the training run.</td></tr>
+<tr><td><strong>Figures generated from code</strong></td><td>Exported images pasted in</td>
+    <td>A pasted figure drifts the moment the code changes and nobody notices.
+    Every number in this report is read from <code>metrics.json</code> at build
+    time.</td></tr>
+</tbody>
+</table>
+
+<h2>14. Implementation and testing</h2>
+<p>
+The implementation is 15 modules under <code>src/</code>, each with a single
+responsibility, plus a test package. The layering in Figure 11 is enforced by
+convention rather than tooling: domain modules import from <code>config</code> and
+<code>utils</code> only, and no domain module imports an application module.
+</p>
+<p>
+<strong>Testing approach.</strong> The suite is 50 unittest tests across five
+files, and its design follows one principle: <em>the claims a reviewer is most
+likely to doubt should be verifiable without the dataset</em>. The split logic is
+therefore tested against synthetic records, so the central methodological claim
+runs on a bare clone in under a second.
+</p>
+<table>
+<thead><tr><th>Test file</th><th>What it establishes</th><th>Needs data?</th></tr></thead>
+<tbody>
+<tr><td><code>test_split_logic.py</code></td>
+    <td>Whole tracks stay on one side; no image is lost or duplicated; every class
+    appears on both sides; the split is deterministic given a seed. One test
+    deliberately demonstrates the bug being avoided — that a random split
+    <em>does</em> leak tracks.</td><td>no (synthetic)</td></tr>
+<tr><td><code>test_split_integrity.py</code></td>
+    <td>The same invariants against the real manifests once <code>prepare</code>
+    has run.</td><td>yes (skips)</td></tr>
+<tr><td><code>test_transforms.py</code></td>
+    <td>CLAHE raises contrast while preserving hue; crops respect image bounds;
+    augmentation is deterministic per seed, never mirrors, and leaves no black
+    border.</td><td>no</td></tr>
+<tr><td><code>test_model.py</code></td>
+    <td>Output shape, parameter budget, resolution independence, absence of conv
+    bias, gradient flow; Grad-CAM map shape, normalisation, hook cleanup and
+    correct behaviour in eval mode.</td><td>no</td></tr>
+<tr><td><code>test_samples.py</code></td>
+    <td>The committed <code>.ppm</code> samples survive a git checkout byte-exact
+    — a PPM has an ASCII header before binary pixels, so git can mistake it for
+    text and rewrite line endings, silently altering pixel data.</td><td>no</td></tr>
+</tbody>
+</table>
+<p>
+Validation is also enforced at runtime rather than only in tests: the splitter
+asserts its own disjointness invariant before writing manifests, so a regression
+in the grouping logic fails immediately and loudly instead of producing a
+plausible-looking but leaking dataset.
+</p>
+
+<h2>15. Challenges and key learnings</h2>
+<p>
+<strong>The near-duplicate frames.</strong> The first working version of this
+project reported about 99.9% validation accuracy, and that number was the most
+useful mistake in the work. It was implausibly high, and investigating why led to
+the filename structure — <code>{{track}}_{{frame}}.ppm</code> — and the realisation
+that 39,209 images depict only {n_signs:,} distinct physical signs. Rebuilding the
+split by track dropped the reported figure and made it mean something. The
+learning generalises past this dataset: when data is collected in bursts, the unit
+of independence is the burst, not the row, and an implausibly good score is
+evidence to investigate rather than to celebrate.
+</p>
+<p>
+<strong>The track-numbering trap.</strong> Grouping by the bare track number looked
+correct and silently merged unrelated signs, because numbering restarts inside each
+class directory. This was caught by asserting an invariant — that no
+<code>(class, track)</code> pair appears on both sides — rather than by reading the
+code again. Encoding assumptions as assertions found a bug that inspection had
+already missed twice.
+</p>
+<p>
+<strong>Augmentation that destroys labels.</strong> Horizontal flipping is such a
+standard default that it was in the pipeline before the sign semantics were
+considered: it turns turn-left into turn-right and makes speed-limit digits
+unreadable. The general lesson is that an augmentation is only valid if it
+preserves the label, and that is a property of the domain, not of the library.
+</p>
+<p>
+<strong>Grad-CAM silently returning nothing.</strong> Two subtleties cost real
+time: the older <code>register_backward_hook</code> reports wrong gradients for
+multi-input modules, and running under <code>no_grad</code> produces an empty map
+with no error. The method needs <code>eval()</code> mode for BatchNorm statistics
+but gradients still enabled — a combination that is easy to get wrong because both
+halves look individually correct.
+</p>
+<p>
+<strong>Working within a CPU budget.</strong> The constraint forced measurement
+rather than guesswork about capacity and resolution. Halving the model width cost
+{d_hw:.2f} points, which showed the 99k-parameter baseline was not padded, and the
+ablations made the case for each preprocessing step empirically instead of by
+appeal to convention.
+</p>
+
+<div class="pagebreak"></div>
+
+<h2>16. Limitations and future work</h2>
 <ul>
 <li><strong>Detection is out of scope.</strong> GTSRB supplies ground-truth
     regions of interest, so the model receives a correctly cropped sign. A
@@ -703,7 +1026,7 @@ sign but not which stroke of a digit it relies on.
     repeated runs with different seeds.</li>
 </ul>
 
-<h2>12. Reproducibility</h2>
+<h2>17. Reproducibility</h2>
 <p>
 The project runs entirely from the command line. Every result in this report is
 regenerated by three commands: <code>prepare</code> downloads and splits the
@@ -726,7 +1049,7 @@ the central methodological claim can be verified on a fresh clone in under a
 second.
 </p>
 
-<h2>13. Conclusion</h2>
+<h2>18. Conclusion</h2>
 <p>
 A three-block convolutional network with 99,019 parameters classifies German
 traffic signs at {acc:.2f}% accuracy on the official GTSRB test set, training in
@@ -745,7 +1068,7 @@ visually similar sign families and trace to input resolution, which points
 clearly at where further work should go.
 </p>
 
-<h2>14. References</h2>
+<h2>19. References</h2>
 <ol>
 <li>J. Stallkamp, M. Schlipsing, J. Salmen, C. Igel. The German Traffic Sign
     Recognition Benchmark: A multi-class classification competition.
